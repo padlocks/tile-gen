@@ -1,6 +1,7 @@
 # tile-gen
 A simple tool for generating tile-based maps. Written in javascript.
 
+[![Run on Repl.it](https://repl.it/badge/github/padlocks/tile-gen)](https://repl.it/github/padlocks/tile-gen)
 ## Concepts
 I've always been interested in how animal crossing works internally, so I decided to make some kind of clone of them game (at least parts of it,) to learn how it works. The first part was trying to figure out how to save so much data about each tile on the map in ACNH. In New Leaf, it wasn't as complex because you couldn't place items outside.
 
