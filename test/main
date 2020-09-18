@@ -1,0 +1,5 @@
+grass : #
+rock : &
+flower : %
+
+-- comment

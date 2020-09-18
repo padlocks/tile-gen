@@ -1,0 +1,11 @@
+-- Default values and how to read main.tiles.
+
+-- property : default value : located at this word in main.tiles
+-- name     : grass         : 1
+
+base_tile : none : 1
+tile_texture : none : 2
+item_placed : null_null : 3
+path_texture : null_null : 4
+special_building_claimed : bool_false : 5
+player_manipulation : bool_true : 6

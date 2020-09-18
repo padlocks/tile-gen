@@ -1,14 +1,72 @@
 const fs = require('fs')
 const readline = require('readline')
+var _ = require('lodash')  //require "lodash"
 
-module.exports.import_tiles_from_file = async (file) => {
-    try {
-        if (!file.includes('.tiles')) throw 'Improper file extension. Is it .tiles?'
+function convert_type(item) {
+    let result = item
+    if (result.includes('_')) {
+        let split_item = item.split('_')
+        let type = split_item[0]
+        let string = split_item[1]
+
+        if (type == 'null') {
+            result = null
+        } else if (type == 'int') {
+            result = parseInt(string)
+        } else if (type == 'bool') {
+            if (string == 'true') {
+                result = true
+            } else {
+                result = false
+            }
+        }
     }
-    catch (err) {
-        console.log(err)
-        return
-    }
+    return result
+}
+
+module.exports.import_structure_from_file = async (file) => {
+    return new Promise((resolve) => {
+        let packed = {}
+        packed.structure = {}
+        packed.book = []
+
+        let cursor = 0
+        let stream = readline.createInterface({
+            input: fs.createReadStream(file),
+            output: process.stdout,
+            terminal: false,
+            autoClose: true
+        })
+
+        stream.on('line', (line) => {
+            cursor++
+            if (line.startsWith("--")) return
+            if (line === '') return
+
+            let split = line.replace(/ /g, '').split(":")
+            let property = split[0]
+            let default_value = convert_type(split[1])
+
+            try {
+                if (split.length <= 1) {
+                    throw `There was a problem translating the file. Please refer to the documentation for proper formatting.\nLine ${cursor}`
+                }
+            }
+            catch (err) {
+                console.log(err)
+                resolve(packed)
+            }
+
+            packed.structure[property] = default_value
+            packed.book[split[2] - 1] = property
+        })
+
+        stream.on('close', () => {
+            resolve(packed)
+        })
+    })
+}
+module.exports.import_tiles_from_file = async (file, packed) => {
     return new Promise((resolve) => {
         let tileset = []
         let cursor = 0
@@ -22,7 +80,8 @@ module.exports.import_tiles_from_file = async (file) => {
         stream.on('line', (line) => {
             cursor++
             if (line.startsWith("--")) return
-            let split = line.split(" ")
+            if (line === '') return
+            let split = line.replace(/ /g, '').split(":")
             try {
                 if (split.length <= 1) {
                     throw `There was a problem translating the file. Please refer to the documentation for proper formatting.\nLine ${cursor}`
@@ -32,23 +91,14 @@ module.exports.import_tiles_from_file = async (file) => {
                 console.log(err)
             }
 
-            let tile = {
-                base_tile: split[0],
-                tile_texture: split[1],
-                item_placed: null,
-                path_texture: null,
-                special_building_claimed: false,
-                player_manipulation: true
-            }
+            let structure = packed.structure
+            let book = packed.book
+            let tile = _.cloneDeep(structure)
 
-            if (split.length >= 3) {
-                tile.path_texture = split[2]
+            for (let i = 0; i <= split.length; i++) {
+                tile[book[i]] = split[i]
             }
-
-            if (split.length >= 4) {
-                tile.item_placed = split[3]
-            }
-
+            
             tileset.push(tile)
         })
 
