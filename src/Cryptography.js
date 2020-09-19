@@ -1,9 +1,9 @@
 const crypto = require('crypto')
 const fs = require('fs')
-const path = require('path')
 const zlib = require('zlib')
 const { Transform } = require('stream')
 const { stringify } = require('querystring')
+const { Readable } = require("stream")
 
 class AppendInitVect extends Transform {
     constructor(initVect, opts) {
@@ -26,11 +26,11 @@ function getCipherKey(password) {
     return crypto.createHash('sha256').update(stringify(password)).digest()
 }
 
-module.exports.encrypt = (file, password, resultFile) => {
+module.exports.encrypt = (string, password, resultFile) => {
     const initVect = crypto.randomBytes(16)
 
     const key = getCipherKey(password)
-    const readStream = fs.createReadStream(file)
+    const readStream = Readable.from([string])
     const gzip = zlib.createGzip()
     const cipher = crypto.createCipheriv('aes256', key, initVect)
     const appendInitVect = new AppendInitVect(initVect)
@@ -57,7 +57,6 @@ module.exports.decrypt = async (file, password) => {
             const readStream = fs.createReadStream(file, { start: 16 })
             const decipher = crypto.createDecipheriv('aes256', key, initVect)
             const unzip = zlib.createUnzip()
-            //const writeStream = fs.createWriteStream(file + '.tmp')
 
             let data = ''
             readStream

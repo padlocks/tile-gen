@@ -1,8 +1,6 @@
 const fs = require('fs')
 const readline = require('readline')
 const _ = require('lodash')
-const { stringify } = require('querystring')
-const crypto = require('./crypto.js')
 
 function convert_type(item) {
     let result = item
@@ -144,22 +142,5 @@ module.exports.visualize_tilemap = async (tilemap) => {
             visual_row.push(top_layer)
         })
         console.log(visual_row.join().replace(/,/g, ' '))
-    })
-}
-
-module.exports.visualize_encrypted_tilemap = async (encrypted_file) => {
-    let decrypted = await crypto.decrypt(encrypted_file, 'default')
-    await this.visualize_tilemap(JSON.parse(decrypted))    
-}
-
-module.exports.save = async (tilemap, file) => {
-    let dat = JSON.stringify(tilemap)
-    fs.writeFile('tmp', dat, function (err) {
-        if (err) return console.log(err)
-    })
-
-    await crypto.encrypt('./tmp', 'default', file)
-    fs.unlink('./tmp', (err) => {
-        if (err) return console.log(err)
     })
 }

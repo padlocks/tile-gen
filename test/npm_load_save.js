@@ -1,7 +1,7 @@
-const tile_gen = require('../src/main.js')
+const SaveData = require('../src/SaveData')
 
 async function main() {
-    await tile_gen.visualize_encrypted_tilemap('./test/savedata')
+    await SaveData.load('./test/savedata')
 }
 
 main()
