@@ -1,7 +1,7 @@
 const fs = require('fs')
 const _ = require('lodash')
 const crypto = require('./Cryptography.js')
-const Game = require('./main.js')
+const Game = require('./Game.js')
 
 module.exports = class SaveData {
     constructor(player, mapdata, villagers) {
@@ -18,11 +18,11 @@ module.exports = class SaveData {
         }
 
         let string = JSON.stringify(save)
-        await crypto.encrypt(string, 'default', file)
+        return await crypto.encrypt(string, 'default', file)
     }
 
     static load = async (encrypted_file) => {
-        let decrypted = JSON.parse(await crypto.decrypt(encrypted_file, 'default'))
-        await Game.visualize_tilemap(decrypted.mapdata.tilemap)
+        let decrypted = await crypto.decrypt(encrypted_file, 'default')
+        return JSON.parse(decrypted)
     }
 }

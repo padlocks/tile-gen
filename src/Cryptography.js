@@ -27,44 +27,51 @@ function getCipherKey(password) {
 }
 
 module.exports.encrypt = (string, password, resultFile) => {
-    const initVect = crypto.randomBytes(16)
+    return new Promise((resolve, reject) => {
+        let initVect = crypto.randomBytes(16)
 
-    const key = getCipherKey(password)
-    const readStream = Readable.from([string])
-    const gzip = zlib.createGzip()
-    const cipher = crypto.createCipheriv('aes256', key, initVect)
-    const appendInitVect = new AppendInitVect(initVect)
-    const writeStream = fs.createWriteStream(resultFile)
+        let key = getCipherKey(password)
+        let readStream = Readable.from([string])
+        let gzip = zlib.createGzip()
+        let cipher = crypto.createCipheriv('aes256', key, initVect)
+        let appendInitVect = new AppendInitVect(initVect)
+        let writeStream = fs.createWriteStream(resultFile)
 
-    readStream
-        .pipe(gzip)
-        .pipe(cipher)
-        .pipe(appendInitVect)
-        .pipe(writeStream)
+        readStream
+            .pipe(gzip)
+            .pipe(cipher)
+            .pipe(appendInitVect)
+            .pipe(writeStream)
+        writeStream.on('close', () => resolve(true))
+    })
 }
 
 module.exports.decrypt = async (file, password) => {
-    return new Promise((resolve) => {
-        const readInitVect = fs.createReadStream(file, { end: 15 })
+    return new Promise((resolve, reject) => {
 
         let initVect
-        readInitVect.on('data', (chunk) => {
-            initVect = chunk
-        })
+        fs.open(file, 'r', (err, fd) => {
+            if (err) console.log(err)
 
-        readInitVect.on('close', async () => {
-            const key = getCipherKey(password)
-            const readStream = fs.createReadStream(file, { start: 16 })
-            const decipher = crypto.createDecipheriv('aes256', key, initVect)
-            const unzip = zlib.createUnzip()
+            fs.read(
+                fd, Buffer.alloc(16), 0, 16, 0,
+                (err, bytes, buffer) => {
+                    if (err) console.log(err)
 
-            let data = ''
-            readStream
-                .pipe(decipher)
-                .pipe(unzip)
-                .on('data', chunk => data += chunk)
-                .on('end', () => resolve(data))
-                .on('error', error => reject(error))
-        })
+                    initVect = buffer
+                    let key = getCipherKey(password)
+                    let readStream = fs.createReadStream(file, { start: 16 })
+                    let decipher = crypto.createDecipheriv('aes256', key, initVect)
+                    let unzip = zlib.createUnzip()
+
+                    let data = ''
+                    readStream
+                        .pipe(decipher)
+                        .pipe(unzip)
+                        .on('data', chunk => data += chunk)
+                        .on('end', () => resolve(data))
+                        .on('error', error => reject(error))
+                })
+        }) 
     })
 }

@@ -2,11 +2,9 @@
   "name": "tile-gen",
   "version": "1.0.0",
   "description": "A simple tool for generating tile-based maps.",
-  "main": "src/main.js",
+  "main": "src/Game.js",
   "scripts": {
-    "test": "node ./test/npm_test.js",
-    "save": "node ./test/npm_save.js",
-    "load_save": "node ./test/npm_load_save.js"
+    "test": "node ./test/Play.js"
   },
   "repository": {
     "type": "git",
