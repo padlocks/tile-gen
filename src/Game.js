@@ -24,7 +24,7 @@ function convert_type(item) {
     return result
 }
 
-module.exports.import_structure_from_file = async (file) => {
+module.exports.create_tile_object = async (file) => {
     return new Promise((resolve) => {
         let packed = {}
         packed.structure = {}
@@ -66,7 +66,7 @@ module.exports.import_structure_from_file = async (file) => {
         })
     })
 }
-module.exports.import_tiles_from_file = async (file, packed) => {
+module.exports.import_tiles = async (file, packed) => {
     return new Promise((resolve) => {
         let tileset = []
         let cursor = 0
@@ -98,7 +98,7 @@ module.exports.import_tiles_from_file = async (file, packed) => {
             for (let i = 0; i <= split.length; i++) {
                 tile[book[i]] = split[i]
             }
-            
+
             tileset.push(tile)
         })
 
@@ -106,15 +106,19 @@ module.exports.import_tiles_from_file = async (file, packed) => {
             resolve(tileset)
         })
     })
-    
+
 }
 
-module.exports.generate_tilemap = async (tileset, rows, columns) => {
-    // add rules
+module.exports.generate_tilemap = async (rows, columns) => {
+    let structureFile = './savedata/tile'
+    let tilesFile = './savedata/gameTiles'
+    let structure = await this.create_tile_object(structureFile)
+    let tileset = await this.import_tiles(tilesFile, structure)
+
     let tilemap = []
-    for (let y= 0; y < rows; y++) {
+    for (let y = 0; y < rows; y++) {
         let row = y
-        tilemap[row] = [] 
+        tilemap[row] = []
 
         for (let x = 0; x < columns; x++) {
             let chosen_tile = Math.floor(Math.random() * tileset.length);

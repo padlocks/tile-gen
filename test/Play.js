@@ -1,21 +1,19 @@
 const fs = require('fs')
 const Game = require('../src/Game')
 const SaveData = require('../src/SaveData')
-const path = './test/savedata'
+const path = './savedata/savedata'
 
 const Main = async () => {
     if (fs.existsSync(path)) {
         StartGame(path)
     } else {
         console.log('No savefile found. Starting new game..')
-        NewGame('./test/structure', './test/main')
+        NewGame()
     }
 }
 
-const NewGame = async (structureFile, tilesFile) => {
-    let structure = await Game.import_structure_from_file(structureFile)
-    let tileset = await Game.import_tiles_from_file(tilesFile, structure)
-    let tilemap = await Game.generate_tilemap(tileset, 5, 10)
+const NewGame = async () => {
+    let tilemap = await Game.generate_tilemap(5, 10)
     let player = {
         new: true,
         name: require("os").userInfo().username
