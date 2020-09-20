@@ -122,7 +122,10 @@ module.exports.generate_tilemap = async (rows, columns) => {
 
         for (let x = 0; x < columns; x++) {
             let chosen_tile = Math.floor(Math.random() * tileset.length);
-            tilemap[row].push(tileset[chosen_tile])
+            let tile = _.cloneDeep(tileset[chosen_tile])
+            tile.coordinates = [x, y]
+            tilemap[row].push(tile)
+
         }
     }
 

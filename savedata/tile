@@ -9,3 +9,4 @@ item_placed : null_null : 3
 path_texture : null_null : 4
 special_building_claimed : bool_false : 5
 player_manipulation : bool_true : 6
+coordinates : none : 7
