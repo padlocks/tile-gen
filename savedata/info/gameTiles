@@ -1,7 +1,7 @@
 grass : #
-rock : &
-flower : %
-gold : *
-tree: ^
+--rock : &
+--flower : %
+--gold : *
+--tree: ^
 
 -- comment

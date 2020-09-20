@@ -129,7 +129,12 @@ module.exports.import_items = async (file) => {
 
             let split = line.replace(/ /g, '').split(":")
             let property = split[0]
-            let default_value = convert_type(split[1])
+            let texture = convert_type(split[1])
+
+            let size = {}
+            size.x = split[2].split('x')[0]
+            size.y = split[2].split('x')[1]
+            let total_space = Math.max(size.x, size.y)
 
             try {
                 if (split.length <= 1) {
@@ -141,7 +146,17 @@ module.exports.import_items = async (file) => {
                 resolve(items)
             }
 
-            items[property] = default_value
+            items[property] = {
+                name: property,
+                uid: 0,
+                texture: texture,
+                size: size,
+                total_space: total_space,
+                center: {
+                    x: 0,
+                    y: 0
+                }
+            }
         })
 
         stream.on('close', () => {
@@ -174,14 +189,13 @@ module.exports.generate_tilemap = async (rows, columns) => {
 }
 
 module.exports.visualize_tilemap = async (tilemap) => {
-    let items = await this.import_items('./savedata/info/items')
     tilemap.forEach(row => {
         let visual_row = []
         row.forEach(tile => {
             let top_layer = tile.tile_texture
 
             if (tile.item_placed) {
-                top_layer = items[tile.item_placed]
+                top_layer = tile.item_placed.texture
             }
 
             visual_row.push(top_layer)
@@ -190,17 +204,33 @@ module.exports.visualize_tilemap = async (tilemap) => {
     })
 }
 
-module.exports.place_item = async (map, item, x, y) => {
+module.exports.place_item = async (map, itemName, x, y) => {
     if (map.tiles[y] === undefined) throw 'Invalid Y Coordinate.'
     if (map.tiles[y][x] === undefined) throw 'Invalid X Coordinate.'
 
-    let occupied = map.tiles[y][x].item_placed
-    if (!occupied) {
-        map.tiles[y][x].item_placed = item
-        console.log(`placed '${item}' at (${x}, ${y})`)
-    } else {
-        console.log(`${occupied} has already used tile (${x}, ${y})`)
+    let items = await this.import_items('./savedata/info/items')
+    let item = items[itemName]
+
+    let placed = []
+    for (let newX = 0; newX < item.size.x; newX++) {
+        for (let newY = 0; newY < item.size.y; newY++) {
+            let occupied = map.tiles[newY+y][newX+x].item_placed
+            if (!occupied) {
+                if (item.center.x == 0 && item.center.y == 0) item.center = { x: newX + x, y: newY + y }
+                placed.push(map.tiles[newY + y][newX + x].coordinates)
+                map.tiles[newY + y][newX + x].item_placed = item
+                console.log(`placed '${itemName}' at (${newX+x}, ${newY+y})`)
+            } else {
+                console.log(`${occupied.name} has already used tile (${newX+x}, ${newY+y})`)
+            }
+        }
     }
+
+    placed.forEach(coordinates => {
+        let item = map.tiles[coordinates[1]][coordinates[0]].item_placed 
+        item.uid = map.next_id
+        map.next_id++
+    })
 }
 
 module.exports.remove_item = async (map, x, y) => {
@@ -209,7 +239,52 @@ module.exports.remove_item = async (map, x, y) => {
 
     let occupied = map.tiles[y][x].item_placed
     if (occupied) {
-        map.tiles[y][x].item_placed = undefined
-        console.log(`removed '${occupied}' from placement at (${x}, ${y})`)
+        for (let newX = 0; newX < occupied.size.x; newX++) {
+            for (let newY = 0; newY < occupied.size.y; newY++) {
+                map.tiles[newY+y][newX+x].item_placed = undefined
+                console.log(`removed '${occupied.name}' from placement at (${newX+x}, ${newY+y})`)
+            }
+        }
+    }
+}
+
+module.exports.rotate_item = async (map, target_x, target_y, angle) => {
+    if (map.tiles[target_y] === undefined) throw 'Invalid Y Coordinate.'
+    if (map.tiles[target_y][target_x] === undefined) throw 'Invalid X Coordinate.'
+
+    let occupied = map.tiles[target_y][target_x].item_placed
+    if (occupied) {
+        let invalid = false
+        let center = occupied.center
+        let radians = (Math.PI / 180) * angle
+        let cos = Math.cos(radians)
+        let sin = Math.sin(radians)
+        for (let newX = 0; newX < occupied.size.x; newX++) {
+            for (let newY = 0; newY < occupied.size.y; newY++) {
+                let x = newX + target_x
+                let y = newY + target_y
+                let rotated_x = Math.abs(Math.round(cos * (x - center.x) + (sin * (y - center.y)) + center.x))
+                let rotated_y = Math.abs(Math.round(cos * (y - center.y) - (sin * (x - center.x)) + center.y))
+
+                // check coordinates exist
+                if (map.tiles[rotated_y] === undefined || map.tiles[rotated_y][rotated_x] === undefined || invalid) {
+                    invalid = true
+                    return console.log('Item didn\'t budge.')
+                }
+
+                // now check to see if an item other than itself is located on specified tile
+                else if (map.tiles[rotated_y][rotated_x].item_placed !== undefined) {
+                    if (map.tiles[rotated_y][rotated_x].item_placed.uid !== occupied.uid)  {
+                        invalid = true
+                        return console.log('Item didn\'t budge.')
+                    }
+                }
+
+                // remove old item placement, add new.
+                map.tiles[y][x].item_placed = undefined
+                map.tiles[rotated_y][rotated_x].item_placed = occupied
+                console.log(`rotated '${occupied.name}' from (${x}, ${y}) to (${rotated_x}, ${rotated_y})`)
+            }
+        }
     }
 }

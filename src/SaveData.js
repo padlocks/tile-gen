@@ -1,7 +1,4 @@
-const fs = require('fs')
-const _ = require('lodash')
 const crypto = require('./Cryptography.js')
-const Game = require('./Game.js')
 
 module.exports = class SaveData {
     constructor(player, mapdata, villagers) {

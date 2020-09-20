@@ -1,7 +1,9 @@
-shovel : ?
-axe : ?
-net : ?
-fishing_rod : ?
-watering_can: ?
+-- name : texture : size
+shovel : ? : 1x1
+axe : ? : 1x1
+net : ? : 1x1
+fishing_rod : ? : 1x1
+watering_can: ? : 1x1
+log : ? : 2x1
 
 -- comment

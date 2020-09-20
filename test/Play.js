@@ -19,6 +19,7 @@ const NewGame = async () => {
         name: require("os").userInfo().username
     }
     let mapdata = {
+        next_id: 100,
         tiles: tilemap
     }
     let villagers = {}
@@ -52,9 +53,12 @@ const StartGame = async (savefile) => {
     await Game.place_item(save.mapdata, 'shovel', 1, 1)
     await Game.place_item(save.mapdata, 'net', 5, 0)
     await Game.place_item(save.mapdata, 'fishing_rod', 7, 3)
+    await Game.place_item(save.mapdata, 'log', 1, 0)
     await Game.visualize_tilemap(save.mapdata.tiles)
-    await Game.place_item(save.mapdata, 'net', 5, 0)
-    await Game.remove_item(save.mapdata, 5, 0)
+    await Game.rotate_item(save.mapdata, 1, 0, 90)
+    await Game.visualize_tilemap(save.mapdata.tiles)
+    await Game.remove_item(save.mapdata, 1, 1)
+    await Game.rotate_item(save.mapdata, 1, 0, 90)
     await Game.visualize_tilemap(save.mapdata.tiles)
 
     ExitGame(save)
