@@ -34,9 +34,11 @@ const NewGame = async () => {
 }
 
 const StartGame = async (savefile) => {
+    // load save, load visual
     let save = await SaveData.load(savefile)
     await Game.visualize_tilemap(save.mapdata.tiles)
-    
+
+    // welcome player
     let welcome
     if (save.player.new) {
         welcome = `Welcome to your new home, ${save.player.name}!`
@@ -45,6 +47,16 @@ const StartGame = async (savefile) => {
         welcome = `Welcome back, ${save.player.name}!`
     }
     console.log(welcome)
+
+    // put items onto tiles
+    await Game.place_item(save.mapdata, 'shovel', 1, 1)
+    await Game.place_item(save.mapdata, 'net', 5, 0)
+    await Game.place_item(save.mapdata, 'fishing_rod', 7, 3)
+    await Game.visualize_tilemap(save.mapdata.tiles)
+    await Game.place_item(save.mapdata, 'net', 5, 0)
+    await Game.remove_item(save.mapdata, 5, 0)
+    await Game.visualize_tilemap(save.mapdata.tiles)
+
     ExitGame(save)
 }
 

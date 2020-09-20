@@ -4,7 +4,8 @@
   "description": "A simple tool for generating tile-based maps.",
   "main": "src/Game.js",
   "scripts": {
-    "test": "node ./test/Play.js"
+    "test": "node ./test/Play.js",
+    "delete_save": "node ./test/DeleteSave.js"
   },
   "repository": {
     "type": "git",

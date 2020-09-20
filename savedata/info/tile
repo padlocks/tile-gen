@@ -5,8 +5,8 @@
 
 base_tile : none : 1
 tile_texture : none : 2
-item_placed : null_null : 3
-path_texture : null_null : 4
+item_placed : undefined_undefined : 3
+path_texture : undefined_undefined : 4
 special_building_claimed : bool_false : 5
 player_manipulation : bool_true : 6
 coordinates : none : 7

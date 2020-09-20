@@ -9,8 +9,8 @@ function convert_type(item) {
         let type = split_item[0]
         let string = split_item[1]
 
-        if (type == 'null') {
-            result = null
+        if (type == 'undefined') {
+            result = undefined
         } else if (type == 'int') {
             result = parseInt(string)
         } else if (type == 'bool') {
@@ -66,6 +66,7 @@ module.exports.create_tile_object = async (file) => {
         })
     })
 }
+
 module.exports.import_tiles = async (file, packed) => {
     return new Promise((resolve) => {
         let tileset = []
@@ -109,9 +110,49 @@ module.exports.import_tiles = async (file, packed) => {
 
 }
 
+module.exports.import_items = async (file) => {
+    return new Promise((resolve) => {
+        let items = {}
+
+        let cursor = 0
+        let stream = readline.createInterface({
+            input: fs.createReadStream(file),
+            output: process.stdout,
+            terminal: false,
+            autoClose: true
+        })
+
+        stream.on('line', (line) => {
+            cursor++
+            if (line.startsWith("--")) return
+            if (line === '') return
+
+            let split = line.replace(/ /g, '').split(":")
+            let property = split[0]
+            let default_value = convert_type(split[1])
+
+            try {
+                if (split.length <= 1) {
+                    throw `There was a problem translating the file. Please refer to the documentation for proper formatting.\nLine ${cursor}`
+                }
+            }
+            catch (err) {
+                console.log(err)
+                resolve(items)
+            }
+
+            items[property] = default_value
+        })
+
+        stream.on('close', () => {
+            resolve(items)
+        })
+    })
+}
+
 module.exports.generate_tilemap = async (rows, columns) => {
-    let structureFile = './savedata/tile'
-    let tilesFile = './savedata/gameTiles'
+    let structureFile = './savedata/info/tile'
+    let tilesFile = './savedata/info/gameTiles'
     let structure = await this.create_tile_object(structureFile)
     let tileset = await this.import_tiles(tilesFile, structure)
 
@@ -133,21 +174,42 @@ module.exports.generate_tilemap = async (rows, columns) => {
 }
 
 module.exports.visualize_tilemap = async (tilemap) => {
+    let items = await this.import_items('./savedata/info/items')
     tilemap.forEach(row => {
         let visual_row = []
         row.forEach(tile => {
             let top_layer = tile.tile_texture
 
-            if (tile.path_texture) {
-                top_layer = tile.path_texture
-            }
-
             if (tile.item_placed) {
-                top_layer = tile.item_placed
+                top_layer = items[tile.item_placed]
             }
 
             visual_row.push(top_layer)
         })
-        console.log(visual_row.join().replace(/,/g, ' '))
+        console.log('', visual_row.join().replace(/,/g, ' '))
     })
+}
+
+module.exports.place_item = async (map, item, x, y) => {
+    if (map.tiles[y] === undefined) throw 'Invalid Y Coordinate.'
+    if (map.tiles[y][x] === undefined) throw 'Invalid X Coordinate.'
+
+    let occupied = map.tiles[y][x].item_placed
+    if (!occupied) {
+        map.tiles[y][x].item_placed = item
+        console.log(`placed '${item}' at (${x}, ${y})`)
+    } else {
+        console.log(`${occupied} has already used tile (${x}, ${y})`)
+    }
+}
+
+module.exports.remove_item = async (map, x, y) => {
+    if (map.tiles[y] === undefined) throw 'Invalid Y Coordinate.'
+    if (map.tiles[y][x] === undefined) throw 'Invalid X Coordinate.'
+
+    let occupied = map.tiles[y][x].item_placed
+    if (occupied) {
+        map.tiles[y][x].item_placed = undefined
+        console.log(`removed '${occupied}' from placement at (${x}, ${y})`)
+    }
 }
