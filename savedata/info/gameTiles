@@ -1,6 +1,8 @@
 grass : #
 --rock : &
---flower : %
+rose : 🌹
+sunflower : 🌻
+tulip : 🌷
 --gold : *
 --tree: ^
 
